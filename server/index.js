@@ -3,6 +3,15 @@ const cors = require('cors');
 const { OpenAI } = require('openai');
 require('dotenv').config();
 
+const requiredEnv = ['OPENAI_API_KEY', 'OPENAI_ORG_ID', 'ASSISTANT_ID'];
+const missing = requiredEnv.filter((name) => !process.env[name]);
+if (missing.length) {
+  console.error(
+    `Missing required environment variables: ${missing.join(', ')}`
+  );
+  process.exit(1);
+}
+
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -17,12 +26,15 @@ app.use(cors({
 app.use(express.json());
 
 const openai = new OpenAI({
-  apiKey: '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',
-  organization: 'org-yrIRGqRGjK6G9jvQw4jDJ5J0'
+  apiKey: process.env.OPENAI_API_KEY,
+  organization: process.env.OPENAI_ORG_ID,
 });
 
 app.post('/api/search', async (req, res) => {
   const { query } = req.body;
+  if (typeof query !== 'string' || query.trim() === '') {
+    return res.status(400).json({ error: 'Query must be a non-empty string' });
+  }
   console.log("🔍 User description:", query);
 
   try {
@@ -34,7 +46,7 @@ app.post('/api/search', async (req, res) => {
     });
 
     const run = await openai.beta.threads.runs.create(thread.id, {
-      assistant_id: 'asst_nlWegWGg7C1YPcF6Tvg2BmDQ'
+      assistant_id: process.env.ASSISTANT_ID,
     });
 
     let result;
@@ -71,6 +83,12 @@ app.post('/api/search', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`🚀 AI Movie Search backend running at http://localhost:${port}`);
-});
+codex/validate-query-in-server/index.js
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`🚀 AI Movie Search backend running at http://localhost:${port}`);
+  });
+}
+
+module.exports = app;
+
