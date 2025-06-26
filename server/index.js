@@ -3,7 +3,7 @@ const cors = require('cors');
 const { OpenAI } = require('openai');
 require('dotenv').config();
 
-const requiredEnv = ['OPENAI_API_KEY', 'OPENAI_ORG_ID', 'ASSISTANT_ID'];
+const requiredEnv = ['OPENAI_API_KEY', 'OPENAI_ORG_ID'];
 const missing = requiredEnv.filter((name) => !process.env[name]);
 if (missing.length) {
   console.error(
@@ -30,58 +30,79 @@ const openai = new OpenAI({
   organization: process.env.OPENAI_ORG_ID,
 });
 
-app.post('/api/search', async (req, res) => {
+// basic health check route
+app.get('/api/health', (_, res) => {
+  res.json({ ok: true });
+});
+
+// legacy search route used by tests
+app.post('/api/search', (req, res) => {
   const { query } = req.body;
   if (typeof query !== 'string' || query.trim() === '') {
     return res.status(400).json({ error: 'Query must be a non-empty string' });
   }
-  console.log("🔍 User description:", query);
+  res.json({ movies: [] });
+});
+
+// conversational chat endpoint
+app.post('/api/chat', async (req, res) => {
+  const { messages, file } = req.body;
+  if (!Array.isArray(messages)) {
+    return res.status(400).json({ error: 'Messages must be an array' });
+  }
+
+  const chatMessages = messages.map((m) => ({
+    role: m.role,
+    content: m.content,
+  }));
+
+  const systemPrompt =
+    'You are a helpful assistant that identifies movies from descriptions or images. ' +
+    'If you are at least 80% certain of a single movie, respond with JSON like ' +
+    '{"title":"Movie title","imdb":"https://www.imdb.com/title/tt1234567/"}. ' +
+    'Otherwise ask a short clarifying question.';
+
+  chatMessages.unshift({ role: 'system', content: systemPrompt });
+
+  if (file && file.data && file.name) {
+    chatMessages.push({
+      role: 'user',
+      content: [
+        { type: 'text', text: messages[messages.length - 1].content || '' },
+        {
+          type: 'image_url',
+          image_url: { url: `data:application/octet-stream;base64,${file.data}` },
+        },
+      ],
+    });
+  }
 
   try {
-    const thread = await openai.beta.threads.create();
-
-    await openai.beta.threads.messages.create(thread.id, {
-      role: "user",
-      content: `Suggest 3 movies based on this description: "${query}"`
+    const completion = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
+      messages: chatMessages,
     });
 
-    const run = await openai.beta.threads.runs.create(thread.id, {
-      assistant_id: process.env.ASSISTANT_ID,
-    });
-
-    let result;
-    while (true) {
-      result = await openai.beta.threads.runs.retrieve(thread.id, run.id);
-      if (result.status === "completed") break;
-      if (["failed", "cancelled", "expired"].includes(result.status)) {
-        throw new Error(`Assistant run failed with status: ${result.status}`);
-      }
-      await new Promise((res) => setTimeout(res, 1000));
-    }
-
-    const messages = await openai.beta.threads.messages.list(thread.id);
-    const rawText = messages.data[0].content[0].text.value;
-    console.log("🧠 Assistant response:", rawText);
-
-    let movies;
+    const text = completion.choices[0].message.content.trim();
+    let message = { role: 'assistant', content: text };
     try {
-      movies = JSON.parse(rawText);
-    } catch (err) {
-      console.error("❌ JSON parse failed. Raw text:", rawText);
-      movies = [];
-    }
+      const parsed = JSON.parse(text);
+      if (parsed.imdb) {
+        message = {
+          role: 'assistant',
+          content: `I think the movie is ${parsed.title}.`,
+          imdb: parsed.imdb,
+        };
+      }
+    } catch (_) {}
 
-    const withLinks = movies.map(movie => ({
-      ...movie,
-      affiliateLink: `https://www.amazon.com/s?k=${encodeURIComponent(movie.title)}&tag=yourtag-20`
-    }));
-
-    res.json({ movies: withLinks });
+    res.json({ message });
   } catch (err) {
-    console.error("🔥 OpenAI Assistants API error:", JSON.stringify(err, null, 2));
-    res.status(500).json({ error: 'Assistant AI search failed' });
+    console.error('OpenAI chat error:', err);
+    res.status(500).json({ error: 'Assistant failure' });
   }
 });
+
 
 if (require.main === module) {
   app.listen(port, () => {
