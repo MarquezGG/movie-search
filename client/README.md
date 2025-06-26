@@ -10,3 +10,17 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Backend server
+
+The Express server located in the `server` directory can be started with:
+
+```bash
+npm start
+```
+
+By default it listens on port `5000`. You can override this by setting the `PORT` environment variable:
+
+```bash
+PORT=3001 npm start
+```
