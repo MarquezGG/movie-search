@@ -23,7 +23,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type']
 }));
 
-app.use(express.json());
+// allow larger JSON payloads for image uploads
+app.use(express.json({ limit: '30mb' }));
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
