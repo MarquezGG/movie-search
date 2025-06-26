@@ -23,6 +23,9 @@ const openai = new OpenAI({
 
 app.post('/api/search', async (req, res) => {
   const { query } = req.body;
+  if (typeof query !== 'string' || query.trim() === '') {
+    return res.status(400).json({ error: 'Query must be a non-empty string' });
+  }
   console.log("🔍 User description:", query);
 
   try {
@@ -71,6 +74,10 @@ app.post('/api/search', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`🚀 AI Movie Search backend running at http://localhost:${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`🚀 AI Movie Search backend running at http://localhost:${port}`);
+  });
+}
+
+module.exports = app;
