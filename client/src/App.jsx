@@ -30,9 +30,20 @@ function App() {
         body: JSON.stringify(body)
       })
       const data = await res.json()
-      if (data.message) setMessages([...newMessages, data.message])
+      if (data.message) {
+        setMessages([...newMessages, data.message])
+      } else if (data.error) {
+        setMessages([
+          ...newMessages,
+          { role: 'assistant', content: 'Sorry, something went wrong' },
+        ])
+      }
     } catch (err) {
       console.error('Chat error', err)
+      setMessages([
+        ...newMessages,
+        { role: 'assistant', content: 'Sorry, something went wrong' },
+      ])
     } finally {
       setLoading(false)
       setFile(null)
