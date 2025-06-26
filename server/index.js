@@ -83,7 +83,6 @@ app.post('/api/search', async (req, res) => {
   }
 });
 
-codex/validate-query-in-server/index.js
 if (require.main === module) {
   app.listen(port, () => {
     console.log(`🚀 AI Movie Search backend running at http://localhost:${port}`);
