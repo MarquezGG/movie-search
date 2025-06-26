@@ -13,11 +13,12 @@ This project demonstrates a small full‑stack application that suggests movies 
 
 ## Environment Variables
 
-The backend expects OpenAI credentials in a `.env` file located in the `server` directory. Create `server/.env` with the following keys:
+The backend expects OpenAI credentials in a `.env` file located in the `server` directory. An example file is provided at `server/.env.example`.  Copy this file to `server/.env` and fill in your own values for the following keys:
 
 ```bash
 OPENAI_API_KEY=<your OpenAI API key>
 OPENAI_ORG_ID=<your OpenAI organization id>
+ASSISTANT_ID=<your OpenAI assistant id>
 ```
 
 ## Running the Backend

@@ -1,1 +1,4 @@
-server/.env
+node_modules/
+dist/
+/.env
+# server env file is tracked intentionally so it can be copied from the example
