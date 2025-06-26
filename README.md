@@ -1,9 +1,9 @@
 # AI Movie Search
 
-This project demonstrates a small full‑stack application that suggests movies using the OpenAI Assistants API. It contains two separate parts:
+This project is a small full‑stack demo that lets you chat with an AI assistant in order to identify movies.  It contains two parts:
 
-- **server** – an Express backend that queries OpenAI and exposes a `/api/search` endpoint.
-- **client** – a Vite/React frontend that lets you describe a movie and displays the suggestions.
+- **server** – an Express backend that proxies requests to the OpenAI API.  The main endpoint is `/api/chat`.
+- **client** – a Vite/React frontend styled similar to ChatGPT where you can type or upload an image/video frame describing a movie.  The assistant will either provide a direct IMDb link or ask you follow up questions.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ The backend expects OpenAI credentials in a `.env` file located in the `server` 
 ```bash
 OPENAI_API_KEY=<your OpenAI API key>
 OPENAI_ORG_ID=<your OpenAI organization id>
-ASSISTANT_ID=<your OpenAI assistant id>
+OPENAI_MODEL=gpt-3.5-turbo
 ```
 
 ## Running the Backend
