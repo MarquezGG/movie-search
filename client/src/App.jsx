@@ -1,10 +1,18 @@
 import { useState } from 'react'
 import './App.css'
+import Popup from './Popup'
 
 function App() {
   const [query, setQuery] = useState('')
   const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(false)
+  const [showPopup, setShowPopup] = useState(false)
+
+  const sampleMovies = [
+    { title: 'The Matrix' },
+    { title: 'Inception' },
+    { title: 'Interstellar' }
+  ]
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -17,11 +25,13 @@ function App() {
         body: JSON.stringify({ query })
       })
       const data = await res.json()
-      setMovies(data.movies || [])
+      setMovies((data.movies || sampleMovies).slice(0, 3))
     } catch (err) {
       console.error('Search failed', err)
+      setMovies(sampleMovies)
     } finally {
       setLoading(false)
+      setShowPopup(true)
     }
   }
 
@@ -48,6 +58,9 @@ function App() {
           </div>
         ))}
       </div>
+      {showPopup && (
+        <Popup movies={movies} onClose={() => setShowPopup(false)} />
+      )}
     </div>
   )
 }
